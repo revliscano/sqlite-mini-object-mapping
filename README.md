@@ -20,4 +20,4 @@ my_model_repository = ModelRepository(MyModel)
 my_model_repository.add(instance)
 ``` 
 
-To make this possible, I highlight the use of [Python's descriptors](https://docs.python.org/3/howto/descriptor.html) and [metaclasses](https://www.python.org/doc/essays/metaclasses/), which were the aspects that wanted to practice the most with the development of this project.
+To make this possible, I highlight the use of [Python's descriptors](https://docs.python.org/3/howto/descriptor.html) and [metaclasses](https://www.python.org/doc/essays/metaclasses/), which were the aspects that I wanted to practice the most with the development of this project.

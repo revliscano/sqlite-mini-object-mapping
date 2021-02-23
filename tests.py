@@ -8,14 +8,14 @@ from repository import ModelRepository
 
 
 class DummyModel(Model):
-    field_a = Field('field_a', 'text')
-    field_b = Field('field_b', 'text')
+    field_a = Field('text')
+    field_b = Field('text')
 
 
 class TestFieldType(TestCase):
     def test_fieldtype_query_string_generation(self):
         expected_query_string = '[field_name] text'
-        field = Field('field_name', 'text')
+        field = Field('text', name='field_name')
         self.assertEqual(field.query_string, expected_query_string)
 
 
@@ -23,6 +23,16 @@ class TestMetaModel(TestCase):
     def test_db_table_name_autogeneration(self):
         expected_name = 'dummy_model'
         self.assertEqual(DummyModel.db_table_name, expected_name)
+
+    def test_field_names_assignation(self):
+
+        class Foo(Model):
+            foo_field = Field('text')
+
+        expected_field_name = 'foo_field'
+        actual_field_name = Foo.foo_field.name
+
+        self.assertEqual(actual_field_name, expected_field_name)
 
     def test_raises_error_if_model_has_no_fields(self):
         with self.assertRaises(ValueError):

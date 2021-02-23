@@ -10,8 +10,8 @@ from model import Model
 
 
 class MyModel(Model):
-    field_a = Field('field_a', 'text')
-    field_b = Field('field_b', 'text')
+    field_a = Field('text')
+    field_b = Field('text')
 
 
 instance = MyModel(field_a='foo', field_b='bar')

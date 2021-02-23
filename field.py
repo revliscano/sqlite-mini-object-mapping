@@ -1,9 +1,9 @@
 class Field:
     QUOTATION_MARK = '?'
 
-    def __init__(self, name, field_type):
-        self.name = name
+    def __init__(self, field_type, name=''):
         self.field_type = field_type
+        self.name = name
 
     @property
     def query_string(self):

@@ -9,12 +9,16 @@ class FieldsCollection:
             vars(objtype)
         )
 
+    def get_all_fields_in(self, members_dictionary):
+        fields = self.filter_fields_from(members_dictionary)
+        return (field for _, field in fields)
+
     @staticmethod
-    def get_all_fields_in(members_dictionary):
+    def filter_fields_from(members_dictionary):
         fields = (
-            attribute
-            for attribute in members_dictionary.values()
-            if isinstance(attribute, Field)
+            (name, member)
+            for name, member in members_dictionary.items()
+            if isinstance(member, Field)
         )
         return fields
 
@@ -26,7 +30,7 @@ class MetaModel(type):
             return len(bases) > 0
 
         def validate_class_has_fields():
-            class_fields = FieldsCollection.get_all_fields_in(class_members)
+            class_fields = FieldsCollection().get_all_fields_in(class_members)
             if is_a_child_model_class() and not [*class_fields]:
                 raise ValueError('Models need to have fields declared')
 
@@ -34,8 +38,17 @@ class MetaModel(type):
             words = re.findall('[A-Z]?[a-z]+', class_name)
             return '_'.join(map(str.lower, words))
 
+        def assign_fields_names():
+            class_fields_and_names = FieldsCollection.filter_fields_from(
+                class_members
+            )
+            for name, field in class_fields_and_names:
+                field.name = name
+
         validate_class_has_fields()
         class_members['db_table_name'] = autogenerate_table_name()
+        assign_fields_names()
+
         return type.__new__(self, class_name, bases, class_members)
 
 

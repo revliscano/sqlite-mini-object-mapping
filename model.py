@@ -1,55 +1,52 @@
 import re
 
-from field import Field
+from field import FieldsCollection
 
 
-class FieldsCollection:
-    def __get__(self, obj, objtype=None):
-        return self.get_all_fields_in(
-            vars(objtype)
+class ConfiguredModelClass:
+    def __init__(self, metaclass, class_name, bases, class_members):
+        self.metaclass = metaclass
+        self.class_name = class_name
+        self.bases = bases
+        self.class_members = class_members
+
+    def get(self):
+        self.validate_class_has_fields()
+        self.autogenerate_table_name()
+        self.assign_fields_names()
+        return type.__new__(
+            self.metaclass, self.class_name, self.bases, self.class_members
         )
 
-    def get_all_fields_in(self, members_dictionary):
-        fields = self.filter_fields_from(members_dictionary)
-        return (field for _, field in fields)
+    def validate_class_has_fields(self):
+        class_fields = FieldsCollection().get_all_fields_in(self.class_members)
+        if self.is_a_child_model_class() and not [*class_fields]:
+            raise ValueError('Models need to have fields declared')
 
-    @staticmethod
-    def filter_fields_from(members_dictionary):
-        fields = (
-            (name, member)
-            for name, member in members_dictionary.items()
-            if isinstance(member, Field)
+    def is_a_child_model_class(self):
+            return len(self.bases) > 0
+
+    def autogenerate_table_name(self):
+        name = self.generate_new_name()
+        self.class_members['db_table_name'] = name
+
+    def generate_new_name(self):
+        words = re.findall('[A-Z]?[a-z]+', self.class_name)
+        return '_'.join(map(str.lower, words))
+
+    def assign_fields_names(self):
+        class_fields_and_names = FieldsCollection.filter_fields_from(
+            self.class_members
         )
-        return fields
+        for name, field in class_fields_and_names:
+            field.name = name
 
 
 class MetaModel(type):
-    def __new__(self, class_name, bases, class_members):
-
-        def is_a_child_model_class():
-            return len(bases) > 0
-
-        def validate_class_has_fields():
-            class_fields = FieldsCollection().get_all_fields_in(class_members)
-            if is_a_child_model_class() and not [*class_fields]:
-                raise ValueError('Models need to have fields declared')
-
-        def autogenerate_table_name():
-            words = re.findall('[A-Z]?[a-z]+', class_name)
-            return '_'.join(map(str.lower, words))
-
-        def assign_fields_names():
-            class_fields_and_names = FieldsCollection.filter_fields_from(
-                class_members
-            )
-            for name, field in class_fields_and_names:
-                field.name = name
-
-        validate_class_has_fields()
-        class_members['db_table_name'] = autogenerate_table_name()
-        assign_fields_names()
-
-        return type.__new__(self, class_name, bases, class_members)
+    def __new__(metaclass, class_name, bases, class_members):
+        return ConfiguredModelClass(
+            metaclass, class_name, bases, class_members
+        ).get()
 
 
 class Model(metaclass=MetaModel):

@@ -16,3 +16,23 @@ class Field:
         if obj:
             return obj.__dict__.get(f'_{self.name}')
         return self
+
+
+class FieldsCollection:
+    def __get__(self, obj, objtype=None):
+        return self.get_all_fields_in(
+            vars(objtype)
+        )
+
+    def get_all_fields_in(self, members_dictionary):
+        fields = self.filter_fields_from(members_dictionary)
+        return (field for _, field in fields)
+
+    @staticmethod
+    def filter_fields_from(members_dictionary):
+        fields = (
+            (name, member)
+            for name, member in members_dictionary.items()
+            if isinstance(member, Field)
+        )
+        return fields

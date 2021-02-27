@@ -4,18 +4,16 @@ from field import FieldsCollection
 
 
 class ConfiguredModelClass:
-    def __init__(self, metaclass, class_name, bases, class_members):
-        self.metaclass = metaclass
-        self.class_name = class_name
-        self.bases = bases
-        self.class_members = class_members
+    def __init__(self, *args):
+        self.class_name, self.bases, self.class_members = args
 
     def get(self):
         self.validate_class_has_fields()
         self.autogenerate_table_name()
         self.assign_fields_names()
+
         return type.__new__(
-            self.metaclass, self.class_name, self.bases, self.class_members
+            MetaModel, self.class_name, self.bases, self.class_members
         )
 
     def validate_class_has_fields(self):
@@ -43,10 +41,8 @@ class ConfiguredModelClass:
 
 
 class MetaModel(type):
-    def __new__(metaclass, class_name, bases, class_members):
-        return ConfiguredModelClass(
-            metaclass, class_name, bases, class_members
-        ).get()
+    def __new__(self, *args):
+        return ConfiguredModelClass(*args).get()
 
 
 class Model(metaclass=MetaModel):
